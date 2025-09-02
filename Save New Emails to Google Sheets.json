@@ -1,0 +1,134 @@
+{
+  "name": "Save New Emails to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ],
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3ae940c3-57c9-4672-a490-c3d9884db996",
+      "name": "New Email Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "O1kYpP2Cxi1AhloX",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1cboEl0VfB2d-llo3x9wR5kIjHheZalZp8wYjrbd8asQ",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Emails",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Subject": "={{ $json.Subject }}",
+            "Sender": "={{ $json.From }}",
+            "Date": "={{ $json.internalDate }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Sender",
+              "displayName": "Sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "286d5221-d69b-4d8c-9718-81719d995baf",
+      "name": "Add Email to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RCq2ap4zMET5llqT",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "New Email Trigger": {
+      "main": [
+        [
+          {
+            "node": "Add Email to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a7ab0d86-3491-47bf-bb32-80e3e91da3f3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29f3e939c65d968e4f90c1a62a5488885e7e7e419b62c7f766a3a4fc276898c4"
+  },
+  "id": "vSV53DzlbejvLlwH",
+  "tags": []
+}
