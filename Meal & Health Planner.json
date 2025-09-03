@@ -1,0 +1,85 @@
+{
+  "name": "Meal & Health Planner",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "calendarId": {
+          "__rl": true,
+          "value": "9f44681ca75d0d041bfda29bc4e748e6e503ea1420f64ac2b620019dc0a82bb7@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Health & Meals"
+        },
+        "triggerOn": "eventStarted",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f20dc013-4341-4b8f-bf3a-2caf90eb8773",
+      "name": "Google Calendar Trigger",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Ucvua6YWdiR9epAQ",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6224439638",
+        "text": "=📅 Reminder:{{ $json.summary }}\n⏰ Starts at:{{ $json.start.dateTime }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9c5f8e48-4081-4e63-909d-e6038f4ea184",
+      "name": "Send a text message",
+      "webhookId": "09edff53-8a27-4453-a2ac-e4bd2fd4b20b",
+      "credentials": {
+        "telegramApi": {
+          "id": "lgJbfEd7OaA7QwSq",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Calendar Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c153f79d-61d2-496b-b307-1258a27d52f9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4248b3db91e85fafa091a7b2ce7dcb0a7356c85b76b5783944cae84914f11064"
+  },
+  "id": "ZiVWhPxU4maBE2LR",
+  "tags": []
+}
