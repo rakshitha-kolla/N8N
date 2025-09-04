@@ -1,0 +1,91 @@
+{
+  "name": "github_push_email_notifier",
+  "nodes": [
+    {
+      "parameters": {
+        "owner": {
+          "__rl": true,
+          "value": "rakshitha-kolla",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "N8N",
+          "mode": "list",
+          "cachedResultName": "N8N",
+          "cachedResultUrl": "https://github.com/rakshitha-kolla/N8N"
+        },
+        "events": [
+          "push"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -235
+      ],
+      "id": "b70af7af-34a7-4b82-bb02-1a196983f7ea",
+      "name": "Github Trigger",
+      "webhookId": "33bd9119-67d9-4d5d-aad1-9aad3b6edb83",
+      "credentials": {
+        "githubApi": {
+          "id": "t7x7otvY6EOxeDgF",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "revanthrampal@gmail.com",
+        "subject": "New Workflow Update in",
+        "emailType": "text",
+        "message": "=Hi Senior,\n\nI just pushed a new workflow update 🚀\n\n📌 Repository:{{ $json.body.repository.full_name }}\n👩‍💻 Pushed By: {{ $json.body.pusher.name }}\n📝 Commit Message:{{ $json.body.head_commit.message }}\n🔗 Commit Link: {{ $json.body.head_commit.url }}\n📅 Time: {{ $json.body.head_commit.timestamp}}\nRegards,\nRakshitha Kolla",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        -240
+      ],
+      "id": "9d6d437f-8b50-40d9-b39a-44383c757f0a",
+      "name": "Send a message",
+      "webhookId": "f4592728-cbc3-4287-acbf-88f90a73dfaa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "C4y85yCCnt2CStqa",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Github Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bf929531-865e-4855-9d1f-5fd2203a8614",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "859c0962376f89e0b55cbe5fbe76f2329072b7356b1ffdde9ca61d59a57197dd"
+  },
+  "id": "L29ImrgLpes2NYHu",
+  "tags": []
+}
