@@ -1,0 +1,372 @@
+{
+  "name": "Citizen Complaint Response Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e123800a-b3c5-4918-bea6-aca7a77b382d",
+              "leftValue": "={{ $json.age }}",
+              "rightValue": 18,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "937b524a-2395-4a71-b170-aea1244e8583",
+      "name": "Age Check"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Eligibility Confirmed",
+        "emailType": "text",
+        "message": "=Hi {{ $json.name }} ,\nyou're eligible for priority support. \n🚀 Complaint Type: {{ $json.complaintType }}\nMessage: {{ $json.message }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        -48
+      ],
+      "id": "dd2b531d-bb45-43a3-89cd-6fe7124623d6",
+      "name": "Send a message",
+      "webhookId": "ceaf1eb3-2f61-4e4d-badd-d4b3429a0e2b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "t8FKCQgp8ZYB7ZjS",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/form-check",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "4ae23788-4c48-4679-995e-a0cef7b308f6",
+      "name": "Webhook",
+      "webhookId": "6e6d8cb8-5268-4c69-92b0-efff183c4e59"
+    },
+    {
+      "parameters": {
+        "jsCode": "const answers = $json.body.form_response.answers;\n\nlet output = {\n  name: \"\",\n  email: \"\",\n  age: 0,\n  complaintType: \"\",\n  message: \"\"\n};\n\nfor (const answer of answers) {\n  const ref = answer.field.ref;\n\n  if (ref === \"31cc719d-3690-469f-859d-0c26049e17f9\") output.name = answer.text;\n  if (ref === \"2ea9f65f-a277-46ef-b0c1-2c8aded33ba8\") output.email = answer.email;\n  if (ref === \"a8246a83-1028-4fae-b411-59ffccba9b4f\") output.age = answer.number;\n  if (ref === \"da0fa2f1-8eaa-42b1-b155-73ace58e50c5\") output.complaintType = answer.choice.label;\n  if (ref === \"ff609bfd-6243-40a5-a1a9-9b3208b58542\") output.message = answer.text;\n}\n\nreturn [{ json: output }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        0
+      ],
+      "id": "c6bfdc70-938e-4e7f-93e7-40956bf32b16",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json[\"email\"]}}",
+        "subject": "Submission Received",
+        "emailType": "text",
+        "message": "=Hi {{$json[\"name\"]}}, thanks for your report. We'll get back to you soon. 🙏 Complaint Type: {{$json[\"complaintType\"]}} Message: {{$json[\"message\"]}}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        96
+      ],
+      "id": "dc0779e8-b66c-4b6e-bc08-3c44bdb86288",
+      "name": "Send a message1",
+      "webhookId": "e2148e28-5521-4208-a50a-045c66b3fb16",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "t8FKCQgp8ZYB7ZjS",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-learning-cpy7.onrender.com",
+            "user-agent": "Typeform Webhooks",
+            "content-length": "2845",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "18.210.136.162",
+            "cf-ipcountry": "US",
+            "cf-ray": "97fb222b8e8705b7-PDX",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "content-type": "application/json",
+            "render-proxy-ttl": "4",
+            "rndr-id": "e6967a3d-9df0-4a3c",
+            "traceparent": "00-38952a3cdffe935950a4fa62b232d5f6-6c6f112b533da5cf-01",
+            "true-client-ip": "18.210.136.162",
+            "x-forwarded-for": "18.210.136.162, 172.68.175.54, 10.204.12.203",
+            "x-forwarded-proto": "https",
+            "x-request-start": "1757970864000544"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event_id": "01K57KN5PY7K4NQEA1FTB9JJ4T",
+            "event_type": "form_response",
+            "form_response": {
+              "form_id": "MdIFOUSZ",
+              "token": "rq9v3jj84g9qc1xp6w4rq9v3jspkemte",
+              "landed_at": "2025-09-15T21:14:15Z",
+              "submitted_at": "2025-09-15T21:14:23Z",
+              "definition": {
+                "id": "MdIFOUSZ",
+                "title": "Citizen Crime Report",
+                "fields": [
+                  {
+                    "id": "HUKoce1S6hV0",
+                    "ref": "31cc719d-3690-469f-859d-0c26049e17f9",
+                    "type": "short_text",
+                    "title": "Name",
+                    "properties": {}
+                  },
+                  {
+                    "id": "yIfjWM2teLAi",
+                    "ref": "2ea9f65f-a277-46ef-b0c1-2c8aded33ba8",
+                    "type": "email",
+                    "title": "email",
+                    "properties": {}
+                  },
+                  {
+                    "id": "K01Gx1fGuqSs",
+                    "ref": "a8246a83-1028-4fae-b411-59ffccba9b4f",
+                    "type": "number",
+                    "title": "age",
+                    "properties": {}
+                  },
+                  {
+                    "id": "E5R3jZBxgnNp",
+                    "ref": "da0fa2f1-8eaa-42b1-b155-73ace58e50c5",
+                    "type": "dropdown",
+                    "title": "complaintType",
+                    "properties": {},
+                    "choices": [
+                      {
+                        "id": "ypnjwdZI2Czu",
+                        "ref": "6a623a2a-b769-4bb3-b2a6-a44787f103db",
+                        "label": "Theft"
+                      },
+                      {
+                        "id": "yzP9EW5ts8YO",
+                        "ref": "b3ed869c-c0c9-446e-b012-5555fcdff5b2",
+                        "label": "Assault"
+                      },
+                      {
+                        "id": "14QkeUoMZv8p",
+                        "ref": "30930b98-0f35-4b2b-a398-e29b67770b0c",
+                        "label": "Vandalism"
+                      },
+                      {
+                        "id": "B0MfzFKcWRk1",
+                        "ref": "7ad8c7b5-33df-4a34-af14-ef6c8f4626bf",
+                        "label": "Fraud"
+                      },
+                      {
+                        "id": "1maXpwltlbvm",
+                        "ref": "52a37636-a2a6-4eab-b17c-c884a9690226",
+                        "label": "Harassment"
+                      },
+                      {
+                        "id": "90B4PN87qM4E",
+                        "ref": "bc9e12c8-c4f2-4ded-bba1-1e174eced26d",
+                        "label": "Missing Person"
+                      },
+                      {
+                        "id": "dNmxm3kAHslb",
+                        "ref": "74cd49c6-af65-401c-9ecf-adb52335a8c0",
+                        "label": "Cybercrime"
+                      },
+                      {
+                        "id": "AToynOG2ZyEx",
+                        "ref": "0a521eac-722f-4835-bcd7-daaf1078548c",
+                        "label": "Other"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "knYZhubJXblM",
+                    "ref": "ff609bfd-6243-40a5-a1a9-9b3208b58542",
+                    "type": "long_text",
+                    "title": "message",
+                    "properties": {}
+                  }
+                ],
+                "endings": [
+                  {
+                    "id": "DefaultTyScreen",
+                    "ref": "default_tys",
+                    "title": "Thanks for completing this typeform\nNow *create your own* — it's free, easy, & beautiful",
+                    "type": "thankyou_screen",
+                    "properties": {
+                      "button_text": "Create a *typeform*",
+                      "show_button": true,
+                      "share_icons": false,
+                      "button_mode": "default_redirect"
+                    },
+                    "attachment": {
+                      "type": "image",
+                      "href": "https://public-assets.typeform.com/public/admin/2dpnUBBkz2VN.gif"
+                    }
+                  }
+                ],
+                "settings": {
+                  "partial_responses_to_all_integrations": true
+                }
+              },
+              "answers": [
+                {
+                  "type": "text",
+                  "text": "deepu",
+                  "field": {
+                    "id": "HUKoce1S6hV0",
+                    "type": "short_text",
+                    "ref": "31cc719d-3690-469f-859d-0c26049e17f9"
+                  }
+                },
+                {
+                  "type": "email",
+                  "email": "krakshitha5289@gmail.com",
+                  "field": {
+                    "id": "yIfjWM2teLAi",
+                    "type": "email",
+                    "ref": "2ea9f65f-a277-46ef-b0c1-2c8aded33ba8"
+                  }
+                },
+                {
+                  "type": "number",
+                  "number": 20,
+                  "field": {
+                    "id": "K01Gx1fGuqSs",
+                    "type": "number",
+                    "ref": "a8246a83-1028-4fae-b411-59ffccba9b4f"
+                  }
+                },
+                {
+                  "type": "choice",
+                  "choice": {
+                    "id": "yzP9EW5ts8YO",
+                    "label": "Assault",
+                    "ref": "b3ed869c-c0c9-446e-b012-5555fcdff5b2"
+                  },
+                  "field": {
+                    "id": "E5R3jZBxgnNp",
+                    "type": "dropdown",
+                    "ref": "da0fa2f1-8eaa-42b1-b155-73ace58e50c5"
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "assult",
+                  "field": {
+                    "id": "knYZhubJXblM",
+                    "type": "long_text",
+                    "ref": "ff609bfd-6243-40a5-a1a9-9b3208b58542"
+                  }
+                }
+              ],
+              "ending": {
+                "id": "DefaultTyScreen",
+                "ref": "default_tys"
+              }
+            }
+          },
+          "webhookUrl": "https://n8n-learning-cpy7.onrender.com/webhook/form-check",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Age Check": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Age Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "23a11c0d-d0ea-41a6-b9f5-c69a2db590ab",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0e210ccb9a4af20f444176e5fca571b2973c4f7e9cedfc1f38c8f8e11ae4a8c1"
+  },
+  "id": "pkKclNwYpA5Vfbrp",
+  "tags": []
+}

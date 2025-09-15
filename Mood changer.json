@@ -1,0 +1,154 @@
+{
+  "name": "Mood changer",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d2bb1dac-9d3a-4d31-9c08-e19d0a5e36ba",
+      "name": "Telegram Trigger",
+      "webhookId": "255db685-49b1-4bcd-aeff-5ebe06c2faa1",
+      "credentials": {
+        "telegramApi": {
+          "id": "yirBY2YKRMQXU0np",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const telegramUpdate = $input.item.json;\nconst message = telegramUpdate.message.text.toLowerCase();\nconst chatId = telegramUpdate.message.chat.id;\n\nlet mood = 'chill';\nlet spotifyQuery = 'chill';  // Single word queries work better\n\nif (message.includes('happy') || message.includes('joy') || message.includes('upbeat')) {\n  mood = 'happy';\n  spotifyQuery = 'happy';\n} else if (message.includes('sad') || message.includes('down') || message.includes('melancholy')) {\n  mood = 'sad';\n  spotifyQuery = 'sad';\n} else if (message.includes('energetic') || message.includes('workout') || message.includes('pump')) {\n  mood = 'energetic';\n  spotifyQuery = 'workout';\n} else if (message.includes('relax') || message.includes('calm') || message.includes('chill')) {\n  mood = 'chill';\n  spotifyQuery = 'relax';\n} else if (message.includes('romantic') || message.includes('love')) {\n  mood = 'romantic';\n  spotifyQuery = 'romantic';\n}\n\nreturn {\n  json: {\n    mood: mood,\n    spotifyQuery: spotifyQuery,\n    chatId: chatId,\n    originalMessage: telegramUpdate.message.text\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "acddb915-7fa5-4507-9281-54df81d4f221",
+      "name": "Mood Detection"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the spotify data (this should be the playlist array)\nconst playlists = $input.item.json;\n\n// Get the mood and chatId from previous nodes\nlet mood = 'music';\nlet chatId = null;\n\n// Check all previous items for mood and chatId\nconst allItems = $input.all();\nfor (let item of allItems) {\n  if (item.json.mood && mood === 'music') {\n    mood = item.json.mood;\n  }\n  if (item.json.chatId && !chatId) {\n    chatId = item.json.chatId;\n  }\n}\n\n// Debug output\nconsole.log('Playlists:', playlists);\nconsole.log('Mood:', mood);\nconsole.log('ChatId:', chatId);\n\nif (!chatId) {\n  return {\n    json: {\n      error: 'No chat ID found',\n      debugAllItems: allItems.map(item => item.json)\n    }\n  };\n}\n\nif (!Array.isArray(playlists) || playlists.length === 0) {\n  return {\n    json: {\n      chatId: chatId,\n      message: `Sorry, couldn't find any ${mood} playlists. Try saying \"happy music\" or \"sad songs\"! 🎵`\n    }\n  };\n}\n\n// Format response\nlet responseMessage = `🎵 Found some ${mood} playlists:\\n\\n`;\n\nplaylists.slice(0, 3).forEach((playlist, index) => {\n  responseMessage += `${index + 1}. ${playlist.name}\\n`;\n  responseMessage += `   📊 ${playlist.tracks.total} tracks\\n`;\n  responseMessage += `   🔗 ${playlist.external_urls.spotify}\\n\\n`;\n});\n\nreturn {\n  json: {\n    chatId: chatId,\n    message: responseMessage\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "fd3cc3e2-c2c3-456c-8938-2e8012401744",
+      "name": "Format Response"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "f73e96e7-6741-4351-a125-4653479a7091",
+      "name": "Telegram Send",
+      "webhookId": "cc60898a-c2d5-4e1d-9c2b-a5e02fed9336",
+      "credentials": {
+        "telegramApi": {
+          "id": "yirBY2YKRMQXU0np",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "playlist",
+        "operation": "search",
+        "query": "={{ $json.spotifyQuery }}",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.spotify",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "8e897990-68cc-4b2b-bdd6-9b7718230509",
+      "name": "Spotify",
+      "credentials": {
+        "spotifyOAuth2Api": {
+          "id": "VR5SLPu0jbS6sujy",
+          "name": "Spotify account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Mood Detection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mood Detection": {
+      "main": [
+        [
+          {
+            "node": "Spotify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Telegram Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spotify": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "04293b4a-dac0-4c27-947c-0d8f5d5baabc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "24c688595264320a29c966d65d89c02b8d2ee47ede25b369218c824e8b2776c9"
+  },
+  "id": "wT0ofNKIT7cYjWkE",
+  "tags": []
+}
