@@ -1,0 +1,591 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a complaint classification assistant.\n\nYour task is to extract the following fields from the user's message:\n- name\n- age\n- complaintType (must be one of: Cybercrime, Sexual Assault, Murder, Other)\n- message\n- email\n\nClassify the complaintType based on the content of the message. Use \"Other\" only if the message does not clearly describe Cybercrime, Sexual Assault, or Murder.\n\nRespond in valid JSON format only, without markdown or extra text.\n\nIf any field is missing, return it as null and include a follow-up message asking the user to provide the missing details.\n\nExample output:\n{\n  \"name\": \"Ravi\",\n  \"age\": 17,\n  \"complaintType\": \"Cybercrime\",\n  \"message\": \"I want to report a phishing scam.\",\n  \"email\": \"ravi@example.com\",\n  \"followUp\": \"Thanks, Ravi. Could you please share your age and email so I can proceed?\"\n}\n\nUser message: \"{{ $json.message }}\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -928,
+        368
+      ],
+      "id": "9359efe9-7dfc-4297-9155-4230a07841c2",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -992,
+        560
+      ],
+      "id": "72a0328d-0390-4b77-8e83-c2aa30a735be",
+      "name": "Google Gemini Chat Model",
+      "notesInFlow": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "s14QZ7sEVQCPUDQx",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -864,
+        592
+      ],
+      "id": "8e478f88-f087-4d6d-9812-958101016a1a",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output;\n{{$json[\"followUp\"] || \"Your complaint has been received. Thank you!\"}}\n\n// Step 1: Remove Markdown formatting\nconst cleaned = raw.replace(/```json|```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  parsed = {\n    name: \"Unknown\",\n    age: 0,\n    complaintType: \"Other\",\n    message: raw\n  };\n}\n\n// Step 2: Fallbacks\nparsed.name = parsed.name || \"Unknown\";\nparsed.age = parsed.age || 0;\nparsed.complaintType = parsed.complaintType || \"Other\";\nparsed.message = parsed.message || \"No message\";\n\nreturn [{ json: parsed }];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        384
+      ],
+      "id": "5daaef82-43f7-4d0a-952f-7f37cb0af71e",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2b527043-3f26-4ebf-9ec3-b4505b535c7d",
+              "leftValue": "={{ $json.age }}",
+              "rightValue": 18,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        384
+      ],
+      "id": "01c30c62-2bbe-4c72-86f5-7959fb85a04b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.complaintType }}",
+                    "rightValue": "Theft",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "15517af7-9144-4b3e-8c28-24df7237c767"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "theft"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "84c3ebc1-06f9-4022-93a5-64f75c297a39",
+                    "leftValue": "={{ $json.complaintType }}",
+                    "rightValue": "Cybercrime / Phishing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cyber Crime"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b43e27ce-415c-493a-abf8-d92f3f851200",
+                    "leftValue": "={{ $json.complaintType }}",
+                    "rightValue": "Sexual Assault",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sexual Assault"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "44597dd6-4ac3-467b-b4cc-e4a68f62315d",
+                    "leftValue": "={{ $json.complaintType }}",
+                    "rightValue": "Murder",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Murder"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "be7b09c2-b70f-4ea5-a6e6-ee493e3d8251",
+                    "leftValue": "={{ $json.complaintType }}",
+                    "rightValue": "Other",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Other"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        16,
+        320
+      ],
+      "id": "8807c1ef-840f-4f18-a153-9395b55d8f72",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "cyberalerts.team@gmail.com",
+        "subject": "=Cybercrime Report from {{$json[\"name\"]}}",
+        "emailType": "text",
+        "message": "=Complaint Type: Cybercrime \nName: {{$json[\"name\"]}}  \nAge: {{$json[\"age\"]}}  \nMessage: {{$json[\"message\"]}}  \nEmail: {{$json[\"email\"]}}  ",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        176
+      ],
+      "id": "b8e44212-e674-4091-86fd-b8eb75ef09b9",
+      "name": "Gmail_Cybercrime",
+      "webhookId": "c534c2c7-251d-4b8a-818c-feef4b352216",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0a3IZSWFuR8iCxdu",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "assaultresponse.sart@gmail.com",
+        "subject": "=Sexual Assault Report from {{$json[\"name\"]}}",
+        "emailType": "text",
+        "message": "=Complaint Type:Sexual Assault\nName: {{$json[\"name\"]}} \nAge: {{$json[\"age\"]}}\nMessage: {{$json[\"message\"]}}   \nEmail: {{$json[\"email\"]}}  ",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        528,
+        320
+      ],
+      "id": "12dcda6a-54ae-4cc6-911e-1926675721a0",
+      "name": "Gmail_Assault",
+      "webhookId": "20cd20a7-b633-4d9d-a15d-871b0529a1d1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0a3IZSWFuR8iCxdu",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1vuM55Sgp_BSZwaN902i15aE0E1bwFbjjFkCnStxbTk4/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vuM55Sgp_BSZwaN902i15aE0E1bwFbjjFkCnStxbTk4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name ": "={{ $json.name }}",
+            "age": "={{ $json.age }}",
+            "message": "={{ $json.message }}",
+            "complaintType": "={{ $json.complaintType }}",
+            "email": "={{ $json.email }}",
+            "timestamp": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name ",
+              "displayName": "name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "age",
+              "displayName": "age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "complaintType",
+              "displayName": "complaintType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        0
+      ],
+      "id": "f719a898-6713-4122-a587-b9737b057691",
+      "name": "Sheets_Log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LYISTyHn9ncDPtWx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "confidential.homicide@gmail.com",
+        "subject": "=Murder Report from {{$json[\"name\"]}}",
+        "emailType": "text",
+        "message": "=Complaint Type:Murder\nName: {{$json[\"name\"]}}  \nAge: {{$json[\"age\"]}} \nMessage: {{$json[\"message\"]}}   \nEmail: {{$json[\"email\"]}}  ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        480
+      ],
+      "id": "c7482ee3-d762-4477-861f-86c8048daaa9",
+      "name": "Send a message",
+      "webhookId": "86eae5ae-8d02-47fc-9c1e-147a61fd32eb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0a3IZSWFuR8iCxdu",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{$json[\"followUp\"] || \"Thanks for your report. Please describe the issue in detail so we can route it appropriately.\"}}\n",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        384,
+        624
+      ],
+      "id": "14b71ebd-c88c-49fa-bd92-195694ad2417",
+      "name": "Respond to Chat"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "“Hi! I’m your assistant for citizen complaints. What would you like to report today?”",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1136,
+        368
+      ],
+      "id": "aaf1e1b6-4300-43a1-8da2-92138d2b29bd",
+      "name": "When chat message received",
+      "webhookId": "0ad88005-491c-4217-b75d-a395f0665cff"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Sheets_Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sheets_Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail_Cybercrime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail_Assault",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sheets_Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sheets_Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sheets_Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "73abc46d-5f03-45eb-ad09-4bc21b2e99d0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af23c3135b983b7a072a883af1aef339f46885ac0c01dd5c092d7edb08a5614b"
+  },
+  "id": "iadTNJ7NnH9UANsQ",
+  "tags": []
+}
